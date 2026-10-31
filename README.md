@@ -124,6 +124,7 @@ El componente `CompositionPanel` mantiene una estructura homogénea con slots pa
 Ejecución del comando `npm run build` en el entorno local:
 
 ```text
+Chris@LAPTOP-D7T8JD94 MINGW64 ~/OneDrive/Documentos/semestre4/React Avanzado/tarea-3/maletin-salida (main)
 $ npm run build
 
 > maletin-salida@0.0.0 build
