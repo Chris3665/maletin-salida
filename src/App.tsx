@@ -1,122 +1,113 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState, useReducer, useRef } from "react";
+import { initialMaterials, initialDigitalResources } from "./data/initialData";
+import { kitReducer, initialKitState } from "./reducers/kitReducer";
+import type { MaterialItem, DigitalResourceItem, KitItem, SearchBoxHandle } from "./types";
+import { SearchBox } from "./components/SearchBox";
+import { GenericCatalog } from "./components/GenericCatalog";
+import { CompositionPanel } from "./components/CompositionPanel";
+import { KitSummary } from "./components/KitSummary";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [kitState, dispatch] = useReducer(kitReducer, initialKitState);
+  const searchBoxRef = useRef<SearchBoxHandle>(null);
+
+  // Filtrado no sensible a mayúsculas
+  const query = searchQuery.trim().toLowerCase();
+
+  const filteredMaterials = initialMaterials.filter((m) =>
+    m.name.toLowerCase().includes(query)
+  );
+
+  const filteredDigitalResources = initialDigitalResources.filter((r) =>
+    r.title.toLowerCase().includes(query)
+  );
+
+  // Adaptadores hacia KitItem
+  const handleSelectMaterial = (mat: MaterialItem) => {
+    const item: KitItem = {
+      origin: "material",
+      key: mat.id,
+      displayName: mat.name,
+      raw: mat,
+    };
+    dispatch({ type: "add", payload: item });
+  };
+
+  const handleSelectDigital = (res: DigitalResourceItem) => {
+    const item: KitItem = {
+      origin: "digital",
+      key: res.code,
+      displayName: res.title,
+      raw: res,
+    };
+    dispatch({ type: "add", payload: item });
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+    <div style={{ maxWidth: "800px", margin: "24px auto", padding: "0 16px", fontFamily: "sans-serif" }}>
+      <h1>Maletín de salida</h1>
+
+      {/* Panel de instrucciones obligatorio */}
+      <section style={{ background: "#eef2ff", padding: "12px", borderRadius: "6px", marginBottom: "16px" }}>
+        <h3>Instrucciones de preparación</h3>
+        <p style={{ margin: 0, fontSize: "14px" }}>
+          Busque los elementos necesarios, agréguelos a su maletín y márquelo como revisado antes de salir a campo.
+        </p>
+      </section>
+
+      {/* Buscador y control de enfoque externo */}
+      <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "16px" }}>
+        <SearchBox
+          ref={searchBoxRef}
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
+        <button type="button" onClick={() => searchBoxRef.current?.focusInput()}>
+          Enfocar buscador
         </button>
-      </section>
+      </div>
 
-      <div className="ticks"></div>
+      {/* Panel 1: Materiales Físicos */}
+      <CompositionPanel
+        header={<h2>Catálogo de Materiales Físicos</h2>}
+        footer={<small>Elementos físicos inventariados listos para empaque.</small>}
+      >
+        <p style={{ fontSize: "13px", color: "#555" }}>
+          Muestra el nombre del material y las unidades disponibles.
+        </p>
+        <GenericCatalog<MaterialItem>
+          items={filteredMaterials}
+          getKey={(item) => item.id}
+          renderItem={(item) => `${item.name} (Disponibles: ${item.quantity})`}
+          onSelect={handleSelectMaterial}
+        />
+      </CompositionPanel>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* Panel 2: Recursos Digitales (con acción de Limpiar búsqueda en footer) */}
+      <CompositionPanel
+        header={<h2>Catálogo de Recursos Digitales</h2>}
+        footer={
+          <button type="button" onClick={() => setSearchQuery("")}>
+            Limpiar búsqueda
+          </button>
+        }
+      >
+        <GenericCatalog<DigitalResourceItem>
+          items={filteredDigitalResources}
+          getKey={(item) => item.code}
+          renderItem={(item) => `${item.title} [Formato: ${item.format.toUpperCase()}]`}
+          onSelect={handleSelectDigital}
+        />
+      </CompositionPanel>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* Resumen del maletín */}
+      <KitSummary
+        state={kitState}
+        onRemove={(key) => dispatch({ type: "remove", payload: { key } })}
+        onMarkReviewed={() => dispatch({ type: "markReviewed" })}
+        onReset={() => dispatch({ type: "reset" })}
+      />
+    </div>
+  );
 }
-
-export default App
